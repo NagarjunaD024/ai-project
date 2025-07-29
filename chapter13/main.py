@@ -50,3 +50,35 @@ app = FastAPI(
 )
 def root():
     return {"message": "API health check successful"}
+
+# Define the prediction route
+@app.post("/predict/", 
+          response_model=PredictionOutput,
+          summary="Predict the cost of acquiring a player",
+          description="""Use this endpoint to predict the range of cost to acquire a player in fantasy football.""",
+          response_description="A JSON record three predicted amounts. Together they give a possible range of acquisition costs for a player.",
+          operation_id="v0_predict",
+          tags=["prediction"],
+)
+def predict(features: FantasyAcquisitionFeatures):
+    # Convert Pydantic model to NumPy array
+    input_data = np.array([[features.waiver_value_tier, 
+                            features.fantasy_regular_season_weeks_remaining, 
+                            features.league_budget_pct_remaining]], 
+                            dtype=np.int64)
+
+    # Perform ONNX inference
+    pred_onx_10 = sess_10.run([label_name_10], {input_name_10: input_data})[0]
+    # Perform ONNX inference
+    pred_onx_50 = sess_50.run([label_name_50], {input_name_50: input_data})[0]
+# Perform ONNX inference
+    pred_onx_90 = sess_90.run([label_name_90], {input_name_90: input_data})[0]
+
+
+    # Return prediction as a Pydantic response model
+    return PredictionOutput(winning_bid_10th_percentile=round(
+                                float(pred_onx_10[0]),2),
+                            winning_bid_50th_percentile=round(
+                                float(pred_onx_50[0]),2),
+                            winning_bid_90th_percentile=round(
+                                float(pred_onx_90[0]), 2))
