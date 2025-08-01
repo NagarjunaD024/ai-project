@@ -89,3 +89,8 @@ class ListTeamsTool(BaseTool):
         list_teams_response = local_swc_client.list_teams(
              team_name=team_name, league_id= league_id)
         return list_teams_response
+    
+class SportsWorldCentralToolkit(BaseToolkit):
+    def get_tools(self) -> List[BaseTool]:
+        """Return the list of tools in the toolkit."""
+        return [HealthCheckTool(), ListLeaguesTool(), ListTeamsTool()]
